@@ -1,7 +1,6 @@
 # workgroup
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sadlil/workgroup)](https://goreportcard.com/report/github.com/sadlil/workgroup)
-<!-- [![Sourcegraph](https://sourcegraph.com/github.com/sadlil/workgroup/-/badge.svg)](https://sourcegraph.com/github.com/sadlil/workgroup?badge) -->
 [![Go Reference](https://pkg.go.dev/badge/github.com/sadlil/workgroup.svg)](https://pkg.go.dev/github.com/sadlil/workgroup)
 [![Go Coverage](https://github.com/sadlil/workgroup/wiki/coverage.svg)](https://raw.githack.com/wiki/sadlil/workgroup/coverage.html)
 
