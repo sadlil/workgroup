@@ -112,7 +112,6 @@ func TestWorkgroup_FailFast_SingleError(t *testing.T) {
 		t.Fatal("group.Wait() = nil, want error")
 	}
 
-	t.Logf("Error Message=%v", err)
 	if !errors.Is(err, errInvalid) {
 		t.Errorf("errors.Is(err, status.ErrInvalidArgument) = false, want true")
 	}
