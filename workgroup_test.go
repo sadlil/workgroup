@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/avast/retry-go"
 )
 
 var (
@@ -191,6 +193,61 @@ func TestGroup_Cancel(t *testing.T) {
 	}
 	if count == 10 {
 		t.Error("expected some goroutines to be cancelled, but all ran")
+	}
+}
+
+func TestGroup_WithRetry(t *testing.T) {
+	tests := []struct {
+		name        string
+		retryPolicy []retry.Option
+		fn          func() error
+		wantCount   int32
+		wantErr     error
+	}{
+		{
+			name: "retry_happy_path",
+			retryPolicy: []retry.Option{
+				retry.Attempts(3),
+			},
+			wantCount: 3,
+			fn:        func() error { return fmt.Errorf("retry_happy_path: %w", errInternal) },
+			wantErr:   errInternal,
+		},
+		{
+			name: "retry_happy_success_no_retry",
+			retryPolicy: []retry.Option{
+				retry.Attempts(100),
+			},
+			wantCount: 1,
+			fn:        func() error { return nil },
+		},
+		{
+			name:        "no_retry_policy",
+			retryPolicy: nil, // No retry policy specified
+			wantCount:   1,
+			fn:          func() error { return fmt.Errorf("no_retry_policy: %w", errInternal) },
+			wantErr:     errInternal,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, g := New(context.Background(), Collect, WithRetry(tc.retryPolicy...))
+
+			var retryCount int32
+			g.Go(ctx, func() error {
+				atomic.AddInt32(&retryCount, 1)
+				return tc.fn()
+			})
+
+			err := g.Wait()
+			if !errors.Is(err, tc.wantErr) {
+				t.Fatalf("group.Wait() = %v, want tempError", err)
+			}
+			if retryCount != tc.wantCount {
+				t.Errorf("expected %v retries, but got %d", tc.wantCount, retryCount)
+			}
+		})
 	}
 }
 

@@ -25,6 +25,8 @@ import (
 	"context"
 	"errors"
 	"sync"
+
+	"github.com/avast/retry-go"
 )
 
 // FailureMode defines how the workgroup handles errors encountered
@@ -51,6 +53,14 @@ func WithLimit(n int) Option {
 	}
 }
 
+// WithRetry sets the retry policy for individual goroutines
+// within the workgroup.
+func WithRetry(opts ...retry.Option) Option {
+	return func(g *Group) {
+		g.retryOptions = append(g.retryOptions, opts...)
+	}
+}
+
 // A Group is a collection of goroutines working on subtasks that are part of
 // the same overall task.
 //
@@ -59,25 +69,35 @@ func WithLimit(n int) Option {
 //   - Does not cancel on error (uses `Collect` failure mode).
 //   - Does not retry on error.
 type Group struct {
-	err         error
-	wg          sync.WaitGroup
-	cancel      func()
-	sem         chan struct{}
-	failureMode FailureMode
-	errOnce     sync.Once
-	errLock     sync.Mutex
+	cancel func()
+
+	err     error
+	errOnce sync.Once
+	errLock sync.Mutex
+
+	wg  sync.WaitGroup
+	sem chan struct{}
+
+	failureMode  FailureMode
+	retryOptions []retry.Option
 }
 
 // New creates a new workgroup with the specified failure mode and options.
 // It returns a context that is derived from `ctx`.
 // The derived context is canceled when the workgroup finishes
 // or is canceled explicitly.
+// If no Retry is specified, the default behavior is no retries.
 func New(ctx context.Context, mode FailureMode, opts ...Option) (context.Context, *Group) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	g := &Group{
 		cancel:      cancel,
 		failureMode: mode,
+		retryOptions: []retry.Option{
+			retry.Attempts(1),
+			retry.LastErrorOnly(true),
+			retry.Context(ctx),
+		},
 	}
 	for _, opt := range opts {
 		opt(g)
@@ -95,7 +115,7 @@ func (g *Group) Go(ctx context.Context, fn func() error) {
 	go func() {
 		defer g.done()
 
-		err := fn()
+		err := retry.Do(fn, g.retryOptions...)
 		if err != nil {
 			g.errLock.Lock()
 			defer g.errLock.Unlock()
