@@ -59,15 +59,13 @@ func WithLimit(n int) Option {
 //   - Does not cancel on error (uses `Collect` failure mode).
 //   - Does not retry on error.
 type Group struct {
-	cancel func()
-	wg     sync.WaitGroup
-
-	err     error
-	errLock sync.Mutex
-	errOnce sync.Once
-
+	err         error
+	wg          sync.WaitGroup
+	cancel      func()
 	sem         chan struct{}
 	failureMode FailureMode
+	errOnce     sync.Once
+	errLock     sync.Mutex
 }
 
 // New creates a new workgroup with the specified failure mode and options.
