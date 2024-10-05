@@ -136,11 +136,6 @@ func (g *Group) Cancel() {
 	}
 }
 
-// Len returns the number of goroutines currently active in the workgroup.
-func (g *Group) Len() int {
-	return len(g.sem)
-}
-
 func (g *Group) add() {
 	if g.sem != nil {
 		g.sem <- struct{}{}
