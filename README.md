@@ -104,6 +104,27 @@ for i := 0; i < 5; i++ {
 g.Wait()
 ```
 
+### Workgroup with Retry
+
+```go
+ctx, group := workgroup.New(ctx, 
+    workgroup.Collect, 
+    workgroup.WithRetry(
+        retry.Attempts(10), 
+        retry.Delay(1*time.Second),
+    ))
+
+for i := 0; i < 5; i++ {
+    group.Go(ctx, func() error {
+        // Simulate a task
+        time.Sleep(100 * time.Millisecond)
+        return nil
+    })
+}
+
+group.Wait()
+```
+
 Checkout the unit tests for more examples.
 
 ## API Documentation
