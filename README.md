@@ -4,21 +4,25 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/sadlil/workgroup.svg)](https://pkg.go.dev/github.com/sadlil/workgroup)
 [![Go Coverage](https://github.com/sadlil/workgroup/wiki/coverage.svg)](https://raw.githack.com/wiki/sadlil/workgroup/coverage.html)
 
-workgroup is a Go library designed for managing collections of goroutines that work on subtasks of a common task. It offers enhanced error propagation, context cancellation signals, and goroutine synchronization mechanisms.
+**workgroup** is a Go library designed for managing collections of goroutines
+that work on subtasks of a common task.
 
-This library is a fork of the errgroup.Group from x/sync, with additional features and modified behavior for handling errors and cancellation.
-
-## Acknowledgements
-
-Go Team: This project builds upon the foundation of the errgroup.Group implementation from the golang.org/x/sync package. The core idea of managing goroutine lifecycle and errors originates from their work.
+This library is inspired by the [errgroup.Group](https://cs.opensource.google/go/x/sync/+/master:errgroup/)
+from the golang.org/x/sync, with additional features and modified behavior for
+handling errors and cancellation.
 
 ## Features
 
-Failure Modes:
+- **Different Failure Modes**
+  - **Collect**: Allows all goroutines to complete, collects all errors, and returns a combined error.
+  - **FailFast**: Cancels all remaining goroutines as soon as the first error is encountered and returns that error.
+- **Retry**: Support for automated and configurable retries for individual tasks in the group.
+- **Concurrency Control**: Configure the maximum number of goroutines that can execute concurrently.
 
-- Collect: Allows all goroutines to complete, collects all errors, and returns a combined error.
-- FailFast: Cancels all remaining goroutines as soon as the first error is encountered and returns that error.
-- Concurrency Control: Configure the maximum number of goroutines that can execute concurrently.
+## Acknowledgements
+
+Go Team: This project builds upon the foundation of the errgroup.Group implementation from the golang.org/x/sync package.
+The core idea of managing goroutine lifecycle and errors originates from their work.
 
 ## Installation
 
